@@ -67,7 +67,7 @@ function readModel(targetSize = 3) {
       theObject.name = 'OBJ';
       theObject.setRotationFromEuler(new THREE.Euler(0, 3.1415 / 2 * 3, 0, 'XYZ'))
       train = theObject;
-	  train.rotation.y = math.pi/2;
+	  train.rotateX(Math.PI / 2);
       scene.add(train);
     }, onProgress, onError);
 
