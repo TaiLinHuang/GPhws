@@ -148,7 +148,7 @@ function animate() {
   if(turn) angle -= Math.PI/15 * dt;
   if (train){
     train.position.set(10*Math.cos(angle), 0.1, 10*Math.sin(angle));
-	train.rotation.y = -angle - 3.1415/2;
+	train.rotation.y = -angle - Math.PI/2;
   }
   requestAnimationFrame(animate);
   render();
