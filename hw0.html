@@ -41,7 +41,7 @@ $("#toggle").click(function() {
     $("#toggle").text('Start');
 });
 
-function readModel(targetSize = 3) {
+function readModel(targetSize = 40) {
 
   var onProgress = function(xhr) {
     if (xhr.lengthComputable) {
@@ -65,8 +65,9 @@ function readModel(targetSize = 3) {
 
       let theObject = unitize(object, targetSize);
       theObject.name = 'OBJ';
-      theObject.setRotationFromEuler(new THREE.Euler(0, 3.1415 / 2 * 3, 0, 'XYZ'))
+      theObject.setRotationFromEuler(new THREE.Euler(100, 3.1415 / 2 * 3, 0, 'XYZ'))
       train = theObject;
+	  train.rotation.y = Math.pi/2;
       scene.add(train);
     }, onProgress, onError);
 
@@ -132,7 +133,6 @@ function init() {
     Angle += Math.PI/30;
   }
   readModel();
-  train.rotateX(Math.PI / 2);
 }
 
 function onWindowResize() {
