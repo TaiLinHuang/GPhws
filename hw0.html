@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+body {
+  overflow: hidden;
+}
+</style>
+</head>
+<body>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/OBJLoader.js"></script>
+<div id="info">
+  <p>My Little Engine</p><br>
+  <button id="toggle">toggle</button>
+</div>
+
+<script>
+var camera, scene, renderer;
+var train, clock, angle = 0;
+var turn = false;
+init();
+animate();
+
+$("#toggle").click(function() {
+  turn = !turn;
+  if (turn)
+    $("#toggle").text('Stop');
+  else
+    $("#toggle").text('Start');
+});
+
+function readModel(targetSize = 3) {
+
+  var onProgress = function(xhr) {
+    if (xhr.lengthComputable) {
+      var percentComplete = xhr.loaded / xhr.total * 100;
+      console.log(Math.round(percentComplete, 2) + '% downloaded');
+    }
+  };
+
+  var onError = function(xhr) {};
+
+  var mtlLoader = new THREE.MTLLoader();
+  mtlLoader.setPath('thomas/');
+  mtlLoader.load('thomas.mtl', function(materials) {
+
+    materials.preload();
+
+    var objLoader = new THREE.OBJLoader();
+    objLoader.setMaterials(materials);
+    objLoader.setPath('thomas/');
+    objLoader.load('thomas.obj', function(object) {
+
+      let theObject = unitize(object, targetSize);
+      theObject.name = 'OBJ';
+      theObject.setRotationFromEuler(new THREE.Euler(0, 3.1415 / 2 * 3, 0, 'XYZ'))
+      train = theObject;
+
+      scene.add(train);
+    }, onProgress, onError);
+
+  });
+
+}
+
+function unitize(object, targetSize) {
+
+  var box3 = new THREE.Box3();
+  box3.setFromObject(object);
+  var size = new THREE.Vector3();
+  size.subVectors(box3.max, box3.min);
+  var center = new THREE.Vector3();
+  center.addVectors(box3.max, box3.min).multiplyScalar(0.5);
+
+  console.log('center: ' + center.x + ', ' + center.y + ', ' + center.z);
+  console.log('size: ' + size.x + ', ' + size.y + ', ' + size.z);
+
+  var objSize = Math.max(size.x, size.y, size.z);
+  var scaleSet = targetSize / objSize;
+
+  var theObject = new THREE.Object3D();
+  theObject.add(object);
+  object.scale.set(scaleSet, scaleSet, scaleSet);
+  object.position.set(-center.x * scaleSet, -center.y * scaleSet, -center.z * scaleSet);
+
+  return theObject;
+
+}
+
+function init() {
+  scene = new THREE.Scene();
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+  document.body.appendChild(renderer.domElement);
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.set(0, 200, 150);
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+  ////////////////////////////////////////////////////////////////
+  var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+  //scene.add(gridXZ);
+  readModel ();
+  
+}
+
+function onWindowResize() {
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  render();
+}
+
+function render() {
+  renderer.render(scene, camera);
+}
+</script>
+</body>
+</html>
