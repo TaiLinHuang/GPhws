@@ -143,6 +143,12 @@ function onWindowResize() {
 }
 
 function animate() {
+  var dt = clock.getDelta();
+  if(turn) angle -= Math.PI/30 * dt * 2;
+  if (train){
+    train.position.set(10*Math.cos(angle), 0.1, 10*Math.sin(angle));
+	train.rotation.y = -angle - 3.1415/2;
+  }
   requestAnimationFrame(animate);
   render();
 }
