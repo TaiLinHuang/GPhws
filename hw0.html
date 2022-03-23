@@ -41,7 +41,7 @@ $("#toggle").click(function() {
     $("#toggle").text('Start');
 });
 
-function readModel(targetSize = 3) {
+function readModel(targetSize = 40) {
 
   var onProgress = function(xhr) {
     if (xhr.lengthComputable) {
@@ -67,12 +67,12 @@ function readModel(targetSize = 3) {
       theObject.name = 'OBJ';
       theObject.setRotationFromEuler(new THREE.Euler(0, 3.1415 / 2 * 3, 0, 'XYZ'))
       train = theObject;
-
       scene.add(train);
+	  
     }, onProgress, onError);
-
+  
   });
-
+  
 }
 
 function unitize(object, targetSize) {
@@ -111,8 +111,28 @@ function init() {
   ////////////////////////////////////////////////////////////////
   var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
   //scene.add(gridXZ);
+  clock = new THREE.Clock();
+  var geometry1 = new THREE.RingGeometry(11, 11.5, 30, 1, 0, Math.PI * 2);
+  var geometry2 = new THREE.RingGeometry(8.5, 9, 30, 1, 0, Math.PI * 2);
+  var material = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    side: THREE.DoubleSide
+  });
+  var iron1 = new THREE.Mesh(geometry1, material);
+  var iron2 = new THREE.Mesh(geometry2, material);
+  iron1.rotateX(Math.PI / 2);
+  iron2.rotateX(Math.PI / 2);
+  scene.add(iron1, iron2);
+  var wood = [];
+  var geometry = new THREE.BoxGeometry(4, 0, 0.2);
+  for (var i = 0, Angle = 0; i <= 60; i++) {
+    wood[i] = new THREE.Mesh(geometry, material);
+    wood[i].position.set(10 * Math.cos(Angle), 0, 10 * Math.sin(Angle));
+    wood[i].rotation.y = -Angle;
+    scene.add(wood[i]);
+    Angle += Math.PI/30;
+  }
   readModel ();
-  
 }
 
 function onWindowResize() {
@@ -124,6 +144,13 @@ function onWindowResize() {
 }
 
 function animate() {
+  var dt = clock.getDelta();
+  if(turn) angle -= Math.PI/30 * dt * 2;
+  if (train){
+    train.position.set(8*Math.cos(angle), 0.75, 8*Math.sin(angle));
+	train.rotation.y = -angle - 3.1415/2;
+  }
+  controls.update()
   requestAnimationFrame(animate);
   render();
 }
