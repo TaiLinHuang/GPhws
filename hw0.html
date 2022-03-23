@@ -65,10 +65,12 @@ function readModel(targetSize = 7) {
 
       let theObject = unitize(object, targetSize);
       theObject.name = 'OBJ';
-      //theObject.setRotationFromEuler(new THREE.Euler(0, Math.pi/2, 0, 'XYZ'))
-	  theObject.rotation.y = Math.pi/2;
-	  theObject.position.set(0, 5, 0);
+      theObject.setRotationFromEuler(new THREE.Euler(0, Math.pi/2, 0, 'XYZ'))
+	  
       train = theObject;
+	  
+	  train.position.set(0, 5, 0);
+	  
       scene.add(train);
     }, onProgress, onError);
 
