@@ -41,7 +41,7 @@ $("#toggle").click(function() {
     $("#toggle").text('Start');
 });
 
-function readModel(targetSize = 7) {
+function readModel(targetSize = 4) {
 
   var onProgress = function(xhr) {
     if (xhr.lengthComputable) {
@@ -130,7 +130,6 @@ function init() {
     Angle += Math.PI/30;
   }
   readModel();
-  train.rotation.x = -Math.PI / 2;
 }
 
 function onWindowResize() {
