@@ -100,6 +100,7 @@ function unitize(object, targetSize) {
 }
 
 function init() {
+  clock = new THREE.Clock();
   scene = new THREE.Scene();
   renderer = new THREE.WebGLRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -131,7 +132,7 @@ function init() {
     scene.add(wood[i]);
     Angle += Math.PI/30;
   }
-
+  readModel();
 }
 
 function onWindowResize() {
