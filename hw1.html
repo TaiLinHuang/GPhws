@@ -40,12 +40,12 @@ class Wall {
 class Puck {
 	constructor (r,h,c,sound) {
 		this.puck = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h,32), new THREE.MeshPhongMaterial({color: c}));
-		this.puck.position.set(Math.floor(Math.random()*15), 1+h/2, Math.floor(Math.random()*15));
+		this.puck.position.set(Math.floor(Math.random()*25), 1+h/2, Math.floor(Math.random()*25));
 		this.light = new THREE.PointLight(c,2,15);
 		this.light.position.set(this.puck.position.x, 1+h, this.puck.position.z);
 		this.sound = sound;
 		this.pos = this.puck.position;
-		this.vel = new THREE.Vector3(Math.floor(Math.random()*10), 0, Math.floor(Math.random()*-10));
+		this.vel = new THREE.Vector3(Math.floor(Math.random()*5), 0, Math.floor(Math.random()*-5));
 		scene.add(this.puck, this.light);
    }
 	update(dt) {
