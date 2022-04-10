@@ -50,28 +50,28 @@ class Puck {
    }
 	update(dt) {
   	this.pos.add (this.vel.clone().multiplyScalar (dt));
-	if (this.pos.z < -15){	
+	if (this.pos.z < -14){	
 		this.sound.load();
 		this.vel.z = - this.vel.z;
-		this.pos.z = -15;
+		this.pos.z = -14;
 		this.sound.play();
 	}
-	if (this.pos.z > 15){	
+	if (this.pos.z > 14){	
 		this.sound.load();
 		this.vel.z = - this.vel.z;
-		this.pos.z = 15;
+		this.pos.z = 14;
 		this.sound.play();
 	}
-	if (this.pos.x > 25){
+	if (this.pos.x > 24){
 		this.sound.load();
 		this.vel.x = - this.vel.x;
-		this.pos.x = 25;
+		this.pos.x = 24;
 		this.sound.play();
 	}
-	if (this.pos.x < -25){
+	if (this.pos.x < -24){
 		this.sound.load();
 		this.vel.x = - this.vel.x;
-		this.pos.x = -25;
+		this.pos.x = -24;
 		this.sound.play();
 	}	
 	this.light.position.set(this.puck.position.x,1,this.puck.position.z);
