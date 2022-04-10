@@ -38,68 +38,58 @@ class Wall {
 	}
 }
 class Puck {
-	constructor (r,h,c,sound) {
+	constructor (r,h,c) {
 		this.puck = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h,32), new THREE.MeshPhongMaterial({color: c}));
-		this.puck.position.set(Math.floor(Math.random()*25), 1+h/2, Math.floor(Math.random()*25));
+		this.puck.position.set(Math.round(Math.random()*25), 1+h/2, Math.round(Math.random()*15));
 		this.light = new THREE.PointLight(c,2,15);
-		this.light.position.set(this.puck.position.x, 1+h, this.puck.position.z);
-		this.sound = sound;
+		this.light.position.set(this.puck.position.x, 1, this.puck.position.z);
 		this.pos = this.puck.position;
-		this.vel = new THREE.Vector3(Math.floor(Math.random()*5), 0, Math.floor(Math.random()*-5));
+		this.vel = new THREE.Vector3(Math.round(Math.random()*20), 0, Math.round(Math.random()*-20));
 		scene.add(this.puck, this.light);
    }
 	update(dt) {
   	this.pos.add (this.vel.clone().multiplyScalar (dt));
-	if (this.pos.z < -14){	
-		this.sound.load();
-		this.vel.z = - this.vel.z;
+	if (this.pos.z < -14){
 		this.pos.z = -14;
-		this.sound.play();
+		this.vel.z *= -1;
+		collisionSound.play();
 	}
 	if (this.pos.z > 14){	
-		this.sound.load();
-		this.vel.z = - this.vel.z;
 		this.pos.z = 14;
-		this.sound.play();
+		this.vel.z *= -1;
+		collisionSound.play();
 	}
 	if (this.pos.x > 24){
-		this.sound.load();
-		this.vel.x = - this.vel.x;
 		this.pos.x = 24;
-		this.sound.play();
+		this.vel.x *= -1;
+		collisionSound.play();
 	}
 	if (this.pos.x < -24){
-		this.sound.load();
-		this.vel.x = - this.vel.x;
 		this.pos.x = -24;
-		this.sound.play();
+		this.vel.x *= -1;
+		collisionSound.play();
 	}	
 	this.light.position.set(this.puck.position.x,1,this.puck.position.z);
 }
 	collision(pucks) {
 		for (var i = 0; i < pucks.length; i++) {
-			if (this.puck.position.distanceTo(pucks[i].puck.position) == 0);
-			else if (this.puck.position.distanceTo(pucks[i].puck.position) <=2) {
-			this.sound.load();
-			var t_vel = this.vel.clone();
-			var t = pucks[i].puck.position.clone().sub(this.puck.position).normalize();
-			var d = 2 - pucks[i].puck.position.distanceTo(this.puck.position);			
-			//	position reset
+			if (this.puck.position.distanceTo(pucks[i].puck.position) == 0)
+			continue;
+			else if(this.puck.position.distanceTo(pucks[i].puck.position) <=2){
+			var vel = this.vel.clone();
+			var t = pucks[i].puck.position.clone().sub(this.puck.position);
+			var d = 2 - this.puck.position.distanceTo(pucks[i].puck.position);				
 			this.puck.position.sub(t.multiplyScalar(d/2));
 			pucks[i].puck.position.add(t.multiplyScalar(d/2));
-			//	puck-puck collision
-			this.vel = t_vel.sub(this.puck.position.clone().sub(pucks[i].puck.position).multiplyScalar(t_vel.sub(pucks[i].vel).dot(this.puck.position.clone().sub(pucks[i].puck.position)) / this.puck.position.clone().distanceToSquared(pucks[i].puck.position)));
-			pucks[i].vel = pucks[i].vel.clone().sub(pucks[i].puck.position.clone().sub(this.puck.position).multiplyScalar(pucks[i].vel.clone().sub(t_vel).dot(pucks[i].puck.position.clone().sub(this.puck.position)) / pucks[i].puck.position.clone().distanceToSquared(this.puck.position)));
-			this.sound.play();
-			}
-			else {
-				this.puck.position.copy (this.puck.position);
-				pucks[i].puck.position.copy (pucks[i].puck.position);
+			this.vel = vel.sub(this.puck.position.clone().sub(pucks[i].puck.position).multiplyScalar(vel.sub(pucks[i].vel).dot(this.puck.position.clone().sub(pucks[i].puck.position)) / this.puck.position.clone().distanceToSquared(pucks[i].puck.position)));
+			pucks[i].vel = pucks[i].vel.clone().sub(pucks[i].puck.position.clone().sub(this.puck.position).multiplyScalar(pucks[i].vel.clone().sub(vel).dot(pucks[i].puck.position.clone().sub(this.puck.position)) / pucks[i].puck.position.clone().distanceToSquared(this.puck.position)));
+			collisionSound.play();
 			}
 		} 
 	}
 }
 var camera, scene, renderer;
+var clock = new THREE.Clock();
 var collisionSound;
 var pucks = [];
 init();
@@ -129,11 +119,11 @@ function init() {
   var wall2 = new Wall(2,8,34,-26,3,0);
   var wall3 = new Wall(50,8,2,0,3,16);
   var wall4 = new Wall(50,8,2,0,3,-16);
-  puck1 = new Puck(1, 0.5, new THREE.Color(0xFF0000), collisionSound);
-  puck2 = new Puck(1, 0.5, new THREE.Color(0xFFFF00), collisionSound);
-  puck3 = new Puck(1, 0.5, new THREE.Color(0x00FF00), collisionSound);
-  puck4 = new Puck(1, 0.5, new THREE.Color(0x00FFFF), collisionSound);
-  puck5 = new Puck(1, 0.5, new THREE.Color(0xFF00FF), collisionSound);
+  var puck1 = new Puck(1, 0.5, 0xFF0000);
+  var puck2 = new Puck(1, 0.5, 0xFFFF00);
+  var puck3 = new Puck(1, 0.5, 0x00FF00);
+  var puck4 = new Puck(1, 0.5, 0x00FFFF);
+  var puck5 = new Puck(1, 0.5, 0xFF00FF);
   pucks.push(puck1, puck2, puck3, puck4, puck5);
 }
 
@@ -146,7 +136,7 @@ function onWindowResize() {
 }
 
 function animate() {
-var dt = 0.01;
+	var dt = clock.getDelta();
 	pucks.forEach(function(p){
 		p.update(dt);
 		p.collision(pucks);
