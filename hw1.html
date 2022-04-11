@@ -78,7 +78,7 @@ class Puck {
 			else if(this.puck.position.distanceTo(pucks[i].puck.position) <=2){
 			var v = this.vel.clone();			
 			this.puck.position.sub((pucks[i].puck.position.clone().sub(this.puck.position)).multiplyScalar((2 - this.puck.position.distanceTo(pucks[i].puck.position))/2));
-			pucks[i].puck.position.add((pucks[i].puck.position.clone().sub(this.puck.position)).multiplyScalar((2 - this.puck.position.distanceTo(pucks[i].puck.position))/2));
+			pucks[i].puck.position.add((this.puck.position.sub(pucks[i].puck.position.clone())).multiplyScalar((2 - this.puck.position.distanceTo(pucks[i].puck.position))/2));
                         this.vel = v.sub(this.puck.position.clone().sub(pucks[i].puck.position).multiplyScalar(v.sub(pucks[i].vel).dot(this.puck.position.clone().sub(pucks[i].puck.position)) / this.puck.position.clone().distanceToSquared(pucks[i].puck.position)));
 			pucks[i].vel = pucks[i].vel.clone().sub(pucks[i].puck.position.clone().sub(this.puck.position).multiplyScalar(pucks[i].vel.clone().sub(v).dot(pucks[i].puck.position.clone().sub(this.puck.position)) / pucks[i].puck.position.clone().distanceToSquared(this.puck.position)));
 			collisionSound.play();
