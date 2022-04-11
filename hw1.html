@@ -44,7 +44,7 @@ class Puck {
 		this.light = new THREE.PointLight(c,2,15);
 		this.light.position.set(this.puck.position.x, 1, this.puck.position.z);
 		this.pos = this.puck.position;
-		this.vel = new THREE.Vector3(Math.round(Math.random()*50), 0, Math.round(Math.random()*-50));
+		this.vel = new THREE.Vector3(Math.round(Math.random()*20), 0, Math.round(Math.random()*-20));
 		scene.add(this.puck, this.light);
    }
 	update(dt) {
@@ -76,9 +76,7 @@ class Puck {
 			if (this.puck.position.distanceTo(pucks[i].puck.position) == 0)
 			continue;
 			else if(this.puck.position.distanceTo(pucks[i].puck.position) <=2){
-			var v = this.vel.clone();
-			var t = pucks[i].puck.position.clone().sub(this.puck.position);
-			var d = 2 - this.puck.position.distanceTo(pucks[i].puck.position);				
+			var v = this.vel.clone();			
 			this.puck.position.sub((pucks[i].puck.position.clone().sub(this.puck.position);).multiplyScalar((2 - this.puck.position.distanceTo(pucks[i].puck.position))/2));
 			pucks[i].puck.position.add((pucks[i].puck.position.clone().sub(this.puck.position);).multiplyScalar((2 - this.puck.position.distanceTo(pucks[i].puck.position))/2));
 			this.vel = v.sub(this.puck.position.clone().sub(pucks[i].puck.position).multiplyScalar(v.sub(pucks[i].vel).dot(this.puck.position.clone().sub(pucks[i].puck.position)) / this.puck.position.clone().distanceToSquared(pucks[i].puck.position)));
