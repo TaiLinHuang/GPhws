@@ -134,7 +134,7 @@ function onWindowResize() {
 }
 
 function animate() {
-	var dt = 1;
+	var dt = clock.getDelta();
 	pucks.forEach(function(p){
 		p.update(dt);
 		p.collision(pucks);
