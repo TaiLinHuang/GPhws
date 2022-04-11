@@ -44,7 +44,7 @@ class Puck {
 		this.light = new THREE.PointLight(c,2,15);
 		this.light.position.set(this.puck.position.x, 1, this.puck.position.z);
 		this.pos = this.puck.position;
-		this.vel = new THREE.Vector3(Math.round(Math.random()*30), 0, Math.round(Math.random()*-30));
+		this.vel = new THREE.Vector3(Math.round(Math.random()*50), 0, Math.round(Math.random()*-50));
 		scene.add(this.puck, this.light);
    }
 	update(dt) {
