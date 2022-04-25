@@ -302,8 +302,11 @@ function buildLeg2(WW, HH, DD) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));	
 	
-	let head = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
-	return head;
+	let mesh = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let leg = new THREE.Group();
+	leg.add (mesh);
+	mesh.position.y = -HH/2;
+	return leg;
 }
 
 function buildArm2(WW, HH, DD) {
@@ -367,7 +370,10 @@ function buildArm2(WW, HH, DD) {
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 	geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));	
 	
-	let arm = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let mesh = new THREE.Mesh (geometry, new THREE.MeshBasicMaterial({map: texture, side:THREE.DoubleSide}));
+	let arm = new THREE.Group();
+	arm.add (mesh);
+	mesh.position.y = -HH/2;
 	return arm;
 }
 
