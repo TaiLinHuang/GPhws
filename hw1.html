@@ -44,7 +44,7 @@ class Puck {
 		this.light = new THREE.PointLight(c,2,15);
 		this.light.position.set(this.puck.position.x, 1, this.puck.position.z);
 		this.pos = this.puck.position;
-		this.vel = new THREE.Vector3(Math.round(Math.random()*20), 0, Math.round(Math.random()*-20));
+		this.vel = new THREE.Vector3(0, 0, Math.round(Math.random()*-20));
 		scene.add(this.puck, this.light);
    }
 	update(dt) {
@@ -76,13 +76,11 @@ class Puck {
 			if (this.puck.position.distanceTo(pucks[i].puck.position) == 0)
 			continue;
 			else if(this.puck.position.distanceTo(pucks[i].puck.position) <=2){
-			var vel = this.vel.clone();
-			var t = pucks[i].puck.position.clone().sub(this.puck.position);
-			var d = 2 - this.puck.position.distanceTo(pucks[i].puck.position);				
-			this.puck.position.sub(t.multiplyScalar(d/2));
-			pucks[i].puck.position.add(t.multiplyScalar(d/2));
-			this.vel = vel.sub(this.puck.position.clone().sub(pucks[i].puck.position).multiplyScalar(vel.sub(pucks[i].vel).dot(this.puck.position.clone().sub(pucks[i].puck.position)) / this.puck.position.clone().distanceToSquared(pucks[i].puck.position)));
-			pucks[i].vel = pucks[i].vel.clone().sub(pucks[i].puck.position.clone().sub(this.puck.position).multiplyScalar(pucks[i].vel.clone().sub(vel).dot(pucks[i].puck.position.clone().sub(this.puck.position)) / pucks[i].puck.position.clone().distanceToSquared(this.puck.position)));
+			var v = this.vel.clone();			
+			this.puck.position.sub((pucks[i].puck.position.clone().sub(this.puck.position)).multiplyScalar((2 - this.puck.position.distanceTo(pucks[i].puck.position))/2));
+			pucks[i].puck.position.add((this.puck.position.sub(pucks[i].puck.position.clone())).multiplyScalar((2 - this.puck.position.distanceTo(pucks[i].puck.position))/2));
+                        this.vel = v.sub(this.puck.position.clone().sub(pucks[i].puck.position).multiplyScalar(v.sub(pucks[i].vel).dot(this.puck.position.clone().sub(pucks[i].puck.position)) / this.puck.position.clone().distanceToSquared(pucks[i].puck.position)));
+			pucks[i].vel = pucks[i].vel.clone().sub(pucks[i].puck.position.clone().sub(this.puck.position).multiplyScalar(pucks[i].vel.clone().sub(v).dot(pucks[i].puck.position.clone().sub(this.puck.position)) / pucks[i].puck.position.clone().distanceToSquared(this.puck.position)));
 			collisionSound.play();
 			}
 		} 
