@@ -30,16 +30,16 @@ const WW = 4,HH = 12;
 var theta = 0,angle = 0,sign = 1;
 var turn = true;
 var pose1 = {
-	lThigh: Math.PI/180,
-  rThigh: -Math.PI/180,
-  lAhigh: -Math.PI/180,
-  rAhigh: Math.PI/180
+	lThigh: Math.PI/18,
+  rThigh: -Math.PI/18,
+  lAhigh: -Math.PI/18,
+  rAhigh: Math.PI/18
 }
 var pose2 = {
-	lThigh: -Math.PI/180,
-  rThigh: +Math.PI/180,
-  lAhigh: +Math.PI/180,
-  rAhigh: -Math.PI/180
+	lThigh: -Math.PI/18,
+  rThigh: +Math.PI/18,
+  lAhigh: +Math.PI/18,
+  rAhigh: -Math.PI/18
 }
 var keys = [
   [0, pose1],
@@ -396,13 +396,21 @@ function update(dt) {
  	  power /= 1.2;   
  	
   power = Math.clamp (power, 0, 80.0); 
+  pose1.lThigh = Math.PI/(26-power/4);
+  pose1.rThigh = -Math.PI/(26-power/4);
+  pose2.lThigh = -Math.PI/(26-power/4);
+  pose2.rThigh = Math.PI/(26-power/4);
+  pose1.lAhigh = -Math.PI/(26-power/4);
+  pose1.rAhigh = Math.PI/(26-power/4);
+  pose2.lAhigh = Math.PI/(26-power/4);
+  pose2.rAhigh = -Math.PI/(26-power/4);
   
   var angle_thrust = angle;
   if (keyboard.pressed("left"))
     angle_thrust += 0.3;
   if (keyboard.pressed("right"))
     angle_thrust -= 0.3;
-    
+  
   var thrust = new THREE.Vector3(1,0,0).multiplyScalar(power).applyAxisAngle (new THREE.Vector3(0,1,0), angle_thrust);
   force.copy (thrust);
   force.add(vel.clone().multiplyScalar(-2))
@@ -422,10 +430,10 @@ function animate() {
   
   if(power>0.1){
 	  let intKey = keyframe(clock.getElapsedTime());
-		lLeg.rotation.z = power*intKey[0];
-		rLeg.rotation.z = power*intKey[1];
-		lArm.rotation.z = power*intKey[2];
-		rArm.rotation.z = power*intKey[3];
+		lLeg.rotation.z = intKey[0];
+		rLeg.rotation.z = intKey[1];
+		lArm.rotation.z = intKey[2];
+		rArm.rotation.z = intKey[3];
   }
   else{
 		lLeg.rotation.z = 0;
