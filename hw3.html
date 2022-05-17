@@ -396,14 +396,14 @@ function update(dt) {
  	  power /= 1.2;   
  	
   power = Math.clamp (power, 0, 80.0); 
-  pose1.lThigh = Math.PI/(26-power/4);
-  pose1.rThigh = -Math.PI/(26-power/4);
-  pose2.lThigh = -Math.PI/(26-power/4);
-  pose2.rThigh = Math.PI/(26-power/4);
-  pose1.lAhigh = -Math.PI/(26-power/4);
-  pose1.rAhigh = Math.PI/(26-power/4);
-  pose2.lAhigh = Math.PI/(26-power/4);
-  pose2.rAhigh = -Math.PI/(26-power/4);
+  pose1.lThigh = Math.PI/(16-power/8);
+  pose1.rThigh = -Math.PI/(16-power/8);
+  pose2.lThigh = -Math.PI/(16-power/8);
+  pose2.rThigh = Math.PI/(16-power/8);
+  pose1.lAhigh = -Math.PI/(16-power/8);
+  pose1.rAhigh = Math.PI/(16-power/8);
+  pose2.lAhigh = Math.PI/(16-power/8);
+  pose2.rAhigh = -Math.PI/(16-power/8);
   
   var angle_thrust = angle;
   if (keyboard.pressed("left"))

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00;
+}
+
+body {
+  overflow: hidden;
+}
+</style>
+</head>
+<body>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://threejs.org/examples/js/misc/Gyroscope.js"></script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/OBJLoader.js"></script>
+<script src="./steve.js"></script>
+<div id="info"><button id="toggle">switch view</button></div>
+<script>
+$('#toggle').click ( function() {
+	turn = ! turn;
+	if (turn) { 
+		$('#toggle').text ("Orbit view");
+	}else{
+		$('#toggle').text ('gyro view');
+	}
+});
+class Agent {
+  constructor(pos, group) {
+    this.pos = pos.clone();
+    this.vel = new THREE.Vector3();
+    this.force = new THREE.Vector3();
+    this.target = null;
+    this.size = 3;
+    this.model = group;
+    scene.add (group);
+    
+    this.MAXSPEED = 50;
+    this.ARRIVAL_R = 30;
+    
+    // for orientable agent
+    this.angle = 0;
+  }
+  
+  update(dt) {
+    this.accumulateForce();
+    this.vel.add(this.force.clone().multiplyScalar(dt));
+
+		// ARRIVAL: velocity modulation
+    if (this.target !== null) {   
+      let dst = this.target.distanceTo(this.pos);
+      if (dst < this.ARRIVAL_R) {  // close enough
+        this.vel.setLength(dst);
+      }
+    }
+    
+   	// MAXSPEED modulation
+		let speed = this.vel.length()
+		this.vel.setLength(clamp (speed, 0, this.MAXSPEED))
+		this.pos.add(this.vel.clone().multiplyScalar(dt))
+    this.model.position.copy(this.pos)
+    
+    // for orientable agent
+    // non PD version
+    if (this.vel.length() > 0.1) {
+	    	this.angle = Math.atan2 (-this.vel.z, this.vel.x)
+    		this.model.rotation.y = this.angle
+   	}
+  }
+  
+  setTarget(x,y,z) {
+  	if (this.target !== null)
+    	this.target.set(x+30*Math.sin(Math.PI/6),y,z+30*Math.cos(Math.PI/6));
+    else {
+    	this.target = new THREE.Vector3(x,y,z);
+    }
+  }
+  
+  targetInducedForce(targetPos) { // seek
+    return targetPos.clone().sub(this.pos).setLength(this.MAXSPEED).sub(this.vel);
+  }
+
+  accumulateForce() {
+    if (this.target) 
+    	this.force.copy(this.targetInducedForce(this.target));
+  }
+}
+
+var camera, scene, renderer, cameraGyro;
+var steve,head, torso, lLeg, rLeg, lArm, rArm;
+const WW = 1.5,HH =4.5;
+var theta = 0,angle = 0,sign = 1;
+var turn = true;
+var pose1 = {
+	lThigh: Math.PI/18,
+  rThigh: -Math.PI/18,
+  lAhigh: -Math.PI/18,
+  rAhigh: Math.PI/18
+}
+var pose2 = {
+	lThigh: -Math.PI/18,
+  rThigh: +Math.PI/18,
+  lAhigh: +Math.PI/18,
+  rAhigh: -Math.PI/18
+}
+var keys = [
+  [0, pose1],
+  [0.5, pose2],
+  [1, pose1]
+];
+var T = 1;
+var clock = new THREE.Clock();
+var ts = clock.getElapsedTime();
+var keyboard = new KeyboardState();
+var pos = new THREE.Vector3();
+var vel = new THREE.Vector3();
+var force = new THREE.Vector3();
+var power,car;
+var pickables = [];
+var mouse = new THREE.Vector2();
+var agent;
+var raycaster;
+var intersects;
+
+init();
+animate();
+
+function clamp (val, min, max) { // min <= val <= max
+   return Math.min(Math.max(val,min),max);
+}
+
+function keyframe(t) {
+  var s = ((t - ts) % T) / T;
+
+  for (var i = 1; i < keys.length; i++) {
+    if (keys[i][0] > s) break;
+  }
+  var ii = i - 1;
+  var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+  intKey = [keys[ii][1].lThigh * (1 - a) + keys[ii + 1][1].lThigh * a,
+            keys[ii][1].rThigh * (1 - a) + keys[ii + 1][1].rThigh * a,
+            keys[ii][1].lAhigh * (1 - a) + keys[ii + 1][1].lAhigh * a,
+            keys[ii][1].rAhigh * (1 - a) + keys[ii + 1][1].rAhigh * a 
+  ];
+	return intKey;
+}
+
+function readModel(targetSize = 1) {
+
+  var onProgress = function(xhr) {
+    if (xhr.lengthComputable) {
+      var percentComplete = xhr.loaded / xhr.total * 100;
+      console.log(Math.round(percentComplete, 2) + '% downloaded');
+    }
+  };
+
+  var onError = function(xhr) {};
+
+  var mtlLoader = new THREE.MTLLoader();
+  mtlLoader.setPath('bus/');
+  mtlLoader.load('1.mtl', function(materials) {
+
+    materials.preload();
+
+    var objLoader = new THREE.OBJLoader();
+    objLoader.setMaterials(materials);
+    objLoader.setPath('bus/');
+    objLoader.load('1.obj', function(object) {
+
+      let theObject = unitize(object, targetSize);
+      theObject.name = 'OBJ';
+      //theObject.setRotationFromEuler(new THREE.Euler(0, Math.PI/2, 0, 'XYZ'));
+	  car = theObject;
+      scene.add(car);
+    }, onProgress, onError);
+  });
+}
+
+function unitize(object, targetSize) {
+
+  var box3 = new THREE.Box3();
+  box3.setFromObject(object);
+  var size = new THREE.Vector3();
+  size.subVectors(box3.max, box3.min);
+  var center = new THREE.Vector3();
+  center.addVectors(box3.max, box3.min).multiplyScalar(0.5);
+
+  console.log('center: ' + center.x + ', ' + center.y + ', ' + center.z);
+  console.log('size: ' + size.x + ', ' + size.y + ', ' + size.z);
+
+  var objSize = Math.max(size.x, size.y, size.z);
+  var scaleSet = targetSize / objSize;
+
+  var theObject = new THREE.Object3D();
+  theObject.add(object);
+  object.scale.set(4,4,4);
+  object.position.set(0, 0, 0);
+  object.setRotationFromEuler(new THREE.Euler(0, Math.PI/2, 0, 'XYZ'));
+  return theObject;
+}
+
+function init() {
+	scene = new THREE.Scene();
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x888888);
+	document.body.appendChild(renderer.domElement);
+	camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+	camera.position.set(0, 70, 150);
+	cameraGyro = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 1, 1000);
+	let controls = new THREE.OrbitControls(camera, renderer.domElement);
+	////////////////////////////////////////////////////////////////
+	let plane = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0.5,
+    visible: true
+    }));
+    scene.add(plane);
+    plane.rotation.x = -Math.PI / 2;
+    pickables = [plane];
+	
+	const light3 = new THREE.PointLight(0xffffff,10);
+	const light4 = new THREE.PointLight(0xffffff,10);
+	light3.position.set(-50, 50, -50);
+	light4.position.set(50, 50, 50);
+	scene.add(light3,light4 );
+	var loader = new THREE.TextureLoader();
+	loader.setCrossOrigin('');
+	texture = loader.load ('https://tailinhuang.github.io/GPhws/steve.png');
+  
+	steve = new THREE.Group();
+	head = buildHead2(2*WW,2*WW,2*WW);
+	head.position.set (0,WW+HH*2,0);
+	torso = buildBody2(2*WW,HH,WW);
+	torso.position.set (0,HH*3/2,0);
+	lLeg = buildLeg2(WW,HH,WW);
+	lLeg.position.set (0,HH,-WW/2);
+	rLeg = buildLeg2(WW,HH,WW);
+	rLeg.position.set (0,HH,WW/2);
+	lArm = buildArm2(WW,HH,WW);
+	lArm.position.set (0,HH*2,-WW*3/2);
+	rArm = buildArm2(WW,HH,WW);
+	rArm.position.set (0,HH*2,WW*3/2);
+	steve.add(head, torso, lLeg, rLeg, lArm, rArm);
+	steve.position.set (0,0,50);
+	steve.setRotationFromEuler(new THREE.Euler(0, Math.PI/2, 0, 'XYZ'));
+	
+	gyro = new THREE.Gyroscope();
+	steve.add (gyro);
+	gyro.add (cameraGyro);
+	cameraGyro.position.set (0,30,40); 
+	cameraGyro.lookAt (0,0,50); 
+	
+	power = 0.1;
+	angle = 0.0;
+	
+	readModel();
+	
+	raycaster = new THREE.Raycaster();
+    document.addEventListener('pointerdown', onDocumentMouseDown, false);
+	
+	agent = new Agent(new THREE.Vector3(-100 + 200 * Math.random(), 0, -100 + 200 * Math.random()), steve);
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function update(dt) {
+
+  keyboard.update();
+ 
+  if (vel.length() > 0) {
+    angle = 1.5*Math.PI + Math.atan2(vel.x, vel.z); 
+  }
+
+  if (keyboard.pressed("space"))  
+ 	  power = 0.1;               
+  if (keyboard.pressed("up"))  
+ 	  power *= 1.2;        
+  if (keyboard.pressed("down"))  
+ 	  power /= 1.2;   
+ 	
+  power = clamp (power, 0, 80.0); 
+  pose1.lThigh = Math.PI/(16-power/8);
+  pose1.rThigh = -Math.PI/(16-power/8);
+  pose2.lThigh = -Math.PI/(16-power/8);
+  pose2.rThigh = Math.PI/(16-power/8);
+  pose1.lAhigh = -Math.PI/(16-power/8);
+  pose1.rAhigh = Math.PI/(16-power/8);
+  pose2.lAhigh = Math.PI/(16-power/8);
+  pose2.rAhigh = -Math.PI/(16-power/8);
+  
+  var angle_thrust = angle;
+  if (keyboard.pressed("left"))
+    angle_thrust += 0.3;
+  if (keyboard.pressed("right"))
+    angle_thrust -= 0.3;
+  
+  var thrust = new THREE.Vector3(1,0,0).multiplyScalar(power).applyAxisAngle (new THREE.Vector3(0,1,0), angle_thrust);
+  force.copy (thrust);
+  force.add(vel.clone().multiplyScalar(-2))
+
+  vel.add(force.clone().multiplyScalar(dt));
+  pos.add(vel.clone().multiplyScalar(dt));
+  
+  agent.setTarget(pos.x,pos.y,pos.z);
+}
+function onDocumentMouseDown(event) {
+
+  event.preventDefault();
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // find intersections
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(pickables);
+  if (intersects.length > 0) {
+    car.position.copy(intersects[0].point);
+	pos.copy(intersects[0].point);
+    car.position.y = 0.15
+    agent.setTarget (intersects[0].point.x, intersects[0].point.y, intersects[0].point.z);
+  }
+}
+function animate() {
+  requestAnimationFrame(animate);
+  render();
+  
+  let dt = clock.getDelta();
+  agent.update(dt);
+  update(dt);
+  car.position.copy(pos);
+  car.rotation.y = angle;
+  if(agent.vel.length() >= 1.0||power>0.1){
+	  let intKey = keyframe(clock.getElapsedTime());
+		lLeg.rotation.z = intKey[0];
+		rLeg.rotation.z = intKey[1];
+		lArm.rotation.z = intKey[2];
+		rArm.rotation.z = intKey[3];
+  }
+  else{
+		lLeg.rotation.z = 0;
+		rLeg.rotation.z = 0;
+		lArm.rotation.z = 0;
+		rArm.rotation.z = 0;
+		power=0.1
+  }
+}
+function render() {
+if(turn)
+	renderer.render(scene, camera);
+else
+	renderer.render(scene, cameraGyro);
+}
+</script>
+</body>
+</html>
